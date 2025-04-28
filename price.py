@@ -41,7 +41,7 @@ try:
     df_latest = df[df['日期'] == latest_date]
     
     # 显示数据更新日期
-    st.markdown(f"<span style='color: red'>**数据更新日期：{latest_date.strftime('%Y-%m-%d')}**</span>", unsafe_allow_html=True)
+    st.markdown(f"<span style='color: red'>**数据更新日期：{latest_date.strftime('%Y-%m-%d')} 14:30**</span>", unsafe_allow_html=True)
 except Exception as e:
     st.error(f"数据加载失败: {str(e)}")
     st.stop()
@@ -51,19 +51,30 @@ if len(df_latest) > 0:
     with st.sidebar:
         st.header("筛选条件")
         
+        # 添加组别筛选
+        group_options = ['全部', '照明', '电工']
+        selected_group = st.selectbox('选择组别', group_options)
+        
+        # 根据组别筛选数据
+        if selected_group != '全部':
+            pre_filtered_df = df_latest[df_latest['组别'] == selected_group]
+        else:
+            pre_filtered_df = df_latest
+        
         # 波动类型筛选
         fluctuation_options = ['全部', '3天5%波动', '5天10%波动', '同时有两种波动']
         selected_fluctuation = st.selectbox('选择波动类型', fluctuation_options)
         
-        # 根据波动类型预筛选数据
+        # 根据波动类型进一步筛选数据
         if selected_fluctuation == '3天5%波动':
-            pre_filtered_df = df_latest[df_latest['波动_3天_5%']]
+            pre_filtered_df = pre_filtered_df[pre_filtered_df['波动_3天_5%']]
         elif selected_fluctuation == '5天10%波动':
-            pre_filtered_df = df_latest[df_latest['波动_5天_10%']]
+            pre_filtered_df = pre_filtered_df[pre_filtered_df['波动_5天_10%']]
         elif selected_fluctuation == '同时有两种波动':
-            pre_filtered_df = df_latest[df_latest['波动_3天_5%'] & df_latest['波动_5天_10%']]
+            pre_filtered_df = pre_filtered_df[pre_filtered_df['波动_3天_5%'] & pre_filtered_df['波动_5天_10%']]
         else:
-            pre_filtered_df = df_latest[df_latest['波动_3天_5%'] | df_latest['波动_5天_10%']]
+            pre_filtered_df = pre_filtered_df[pre_filtered_df['波动_3天_5%'] | pre_filtered_df['波动_5天_10%']]
+
             
         # 获取三级分类选项
         if len(pre_filtered_df) > 0:
@@ -116,8 +127,8 @@ if len(df_latest) > 0:
                 
                 # 获取3天前和5天前的价格数据
                 asin_history = df[df['ASIN'] == asin].sort_values('日期', ascending=False)
-                price_3days_ago = asin_history[asin_history['日期'] == latest_date - pd.Timedelta(days=3)]['结算价($)'].iloc[0] if len(asin_history[asin_history['日期'] == latest_date - pd.Timedelta(days=3)]) > 0 else None
-                price_5days_ago = asin_history[asin_history['日期'] == latest_date - pd.Timedelta(days=5)]['结算价($)'].iloc[0] if len(asin_history[asin_history['日期'] == latest_date - pd.Timedelta(days=5)]) > 0 else None
+                price_3days_ago = asin_history[asin_history['日期'] == latest_date - pd.Timedelta(days=2)]['结算价($)'].iloc[0] if len(asin_history[asin_history['日期'] == latest_date - pd.Timedelta(days=2)]) > 0 else None
+                price_5days_ago = asin_history[asin_history['日期'] == latest_date - pd.Timedelta(days=4)]['结算价($)'].iloc[0] if len(asin_history[asin_history['日期'] == latest_date - pd.Timedelta(days=4)]) > 0 else None
                 
                 summary_data.append({
                     '日期': asin_data['日期'].iloc[0].strftime('%Y-%m-%d'),
